@@ -90,6 +90,7 @@ func (l *Lexer) NextToken() token.Token {
 		} else if isDigital(l.ch) {
 			t.Literal = l.readNumber()
 			t.Type = token.INT
+			return t
 		} else {
 			t.Type = token.ILLEGAL
 		}

@@ -6,7 +6,8 @@ import (
 )
 
 func TestNextToken(t *testing.T) {
-	input := `=+(){},;`
+	input := `=+(){},;
+	let`
 
 	tests := []struct {
 		expectedType    token.TokenType
@@ -20,9 +21,9 @@ func TestNextToken(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.COMMA, ","},
 		{token.SEMICOLON, ";"},
+		{token.LET,"let"},
 		{token.EOF, ""},
 	}
-
 	l := New(input)
 
 	for i, tt := range tests {
@@ -38,7 +39,9 @@ func TestNextToken(t *testing.T) {
 }
 
 func TestRawToken(t *testing.T) {
-	input := `let five = 5;
+	input := `
+	let five = 5;
+
 	let ten = 10;
 	let add = fn(x,y) {
 		return x + y;
@@ -54,6 +57,13 @@ func TestRawToken(t *testing.T) {
 	10 != 1
 	1 == 1
 	`
+	// input2 :=  `
+
+
+	// let five = 5;
+	// let x = 6;
+	// let foobar = 123500;
+	// `
 	l := New(input)
 	for {
 		token := l.NextToken()
