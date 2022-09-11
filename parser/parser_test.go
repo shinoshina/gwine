@@ -120,6 +120,7 @@ func TestNodeLiteral(t *testing.T) {
 	!2*2+1/2;
 	-1*2+1-2;
 	-1+2+3;
+	-1*(5+5);
 	`
 
 	l := lexer.New(input)
