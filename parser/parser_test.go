@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"gwine/ast"
 	"gwine/lexer"
 	"testing"
@@ -40,5 +41,68 @@ func TestLetStatement(t *testing.T) {
 			t.Fatalf("test %v wrong , expected %v ,got %v ",i,tt.expectedIdentifier,stmt.TokenLiteral())
 		}
 	}
+}
 
+func TestIdentifierExpression(t *testing.T) {
+
+	input := "foobar;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	stmt , ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok{
+		t.Fatalf("wtf??")
+	}
+	fmt.Printf("expression statement token %+v\n",stmt.Token)
+
+	ident , ok := stmt.Expression.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("wtf2??")
+	}
+	fmt.Printf("identifier token %+v\nvalue %v\n",ident.Token,ident.Value)
+
+}
+
+func TestIntegerLiteral(t *testing.T) {
+	input := "5;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	stmt , ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok{
+		t.Fatalf("wtf??")
+	}
+	fmt.Printf("expression statement token %+v\n",stmt.Token)
+	ident , ok := stmt.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("wtf2??")
+	}
+	fmt.Printf("identifier token %+v\nvalue %v\n",ident.Token,ident.Value)
+}
+func TestPrefixExpression(t *testing.T) {
+	input := "-115;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	stmt , ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok{
+		t.Fatalf("wtf??")
+	}
+	fmt.Printf("expression statement token %+v\n",stmt.Token)
+	ident , ok := stmt.Expression.(*ast.PrefixExpression)
+	if !ok {
+		t.Fatalf("wtf2??")
+	}
+	fmt.Printf("identifier token %+v\noperator %v\n",ident.Token,ident.Operator)
+	num ,ok := ident.Right.(*ast.IntegerLiteral)
+	if !ok{
+		t.Fatalf("wtf??3")
+	}
+	fmt.Printf("identifier token %+v\nvalue %v\n",num.Token,num.Value)
 }
