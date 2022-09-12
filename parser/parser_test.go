@@ -130,7 +130,127 @@ func TestNodeLiteral(t *testing.T) {
 	for i, _ := range program.Statements {
 		stmt, ok := program.Statements[i].(*ast.ExpressionStatement)
 		if !ok {
-			t.Fatalf("nmsl")
+			t.Fatalf("ffffail")
+		}
+		fmt.Println(stmt.String())
+	}
+
+}
+
+func TestTrueFalse(t *testing.T) {
+
+	input := `
+	true;
+	true;
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for i, _ := range program.Statements {
+		stmt, ok := program.Statements[i].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("failffffffail")
+		}
+		fmt.Println(stmt.String())
+	}
+
+}
+
+func TestFunctionLiteral(t *testing.T) {
+	input := `
+	fn(x,y){x+y;};
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for i, _ := range program.Statements {
+		stmt, ok := program.Statements[i].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("failffffffail")
+		}
+		fmt.Println(stmt.String())
+	}
+}
+func TestCall(t *testing.T) {
+	input := `
+	add(x,y);
+	add(x,y+1,-1+add(x,y,z));
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for i, _ := range program.Statements {
+		stmt, ok := program.Statements[i].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("failffffffail")
+		}
+		fmt.Println(stmt.String())
+	}
+}
+func TestLetAndReturn(t *testing.T) {
+	// input := `
+	// let a = add(x,y);
+	// let a = add(x,y+1,-1+add(x,y,z));
+	// let a = 1;
+	// let a = 1
+	// let b = fn(x,y){
+	// 	let a = b;
+	// };
+	// let c = if(x > y){a;}else{b;};
+	// `
+	input2 := `let c = if(x > y) {a;} else{b;};`
+	l := lexer.New(input2)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for i, _ := range program.Statements {
+		stmt, ok := program.Statements[i].(*ast.LetStatement)
+		if !ok {
+			t.Fatalf("failffffffail")
+		}
+		fmt.Println(stmt.String())
+		fmt.Println(stmt)
+	}
+}
+
+func TestEQNEQ(t *testing.T) {
+	input := `
+	a!=b
+	a==b
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for i, _ := range program.Statements {
+		stmt, ok := program.Statements[i].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("failffffffail")
+		}
+		fmt.Println(stmt.String())
+	}
+
+}
+func TestIFELSE(t *testing.T) {
+	input := `
+	if(x>y){return x;}else{y;}
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for i, _ := range program.Statements {
+		stmt, ok := program.Statements[i].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("failffffffail")
 		}
 		fmt.Println(stmt.String())
 	}
