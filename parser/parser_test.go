@@ -194,18 +194,19 @@ func TestCall(t *testing.T) {
 	}
 }
 func TestLetAndReturn(t *testing.T) {
-	// input := `
-	// let a = add(x,y);
-	// let a = add(x,y+1,-1+add(x,y,z));
-	// let a = 1;
-	// let a = 1
-	// let b = fn(x,y){
-	// 	let a = b;
-	// };
-	// let c = if(x > y){a;}else{b;};
-	// `
-	input2 := `let c = if(x > y) {a;} else{b;};`
-	l := lexer.New(input2)
+	input := `
+	let a = add(x,y);
+	let a = add(x,y+1,-1+add(x,y,z));
+	let a = 1;
+	let a = 1
+	let b = fn(x,y){
+		let a = b;
+	};
+	let c = if(x > y) {a;}else{b;};
+	let c = if(x > y) {return a;} else{b;};
+	`
+	
+	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
 

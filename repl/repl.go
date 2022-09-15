@@ -3,8 +3,9 @@ package repl
 import (
 	"bufio"
 	"fmt"
+	"gwine/evaluator"
 	"gwine/lexer"
-	"gwine/token"
+	"gwine/parser"
 	"io"
 )
 
@@ -21,10 +22,18 @@ func Start(in io.Reader,out io.Writer){
 		}
 
 		l := lexer.New(sc.Text())
+		p := parser.New(l)
+		program := p.ParseProgram()
+		//fmt.Fprintln(out,program.String())
+	
 
-		for t := l.NextToken() ; t.Type != token.EOF ; t = l.NextToken(){
-			fmt.Fprintf(out,"%+v\n",t)
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out,evaluated.Inspect())
+            io.WriteString(out,"\n")
 		}
+
+		
 
 
 	}
