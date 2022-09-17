@@ -36,6 +36,20 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
+	case *ast.FunctionLiteral:
+		params := node.Parameters
+		body := node.Body
+		return &object.Function{Parameters: params, Env: env, Body: body}
+	case *ast.CallExpression:
+		function := Eval(node.Function, env)
+		if isError(function) {
+			return function
+		}
+		args := evalArgs(node.Arguments, env)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+		return applyFunction(function,args)
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, env)
 		if isError(right) {
@@ -200,6 +214,44 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 		return newError("identifier not found %v", node.Value)
 	}
 	return val
+}
+func evalArgs(args []ast.Expression, env *object.Environment) []object.Object {
+	var objs []object.Object
+
+	for _, a := range args {
+		o := Eval(a, env)
+		if isError(o) {
+			return []object.Object{o}
+		}
+		objs = append(objs, o)
+	}
+	return objs
+}
+func applyFunction(fn object.Object, args []object.Object) object.Object {
+	function, ok := fn.(*object.Function)
+	if !ok {
+		return newError("%v not a function", function.Type())
+	}
+
+	innerEnv := extendFunctionEnv(function,args)
+	rv := Eval(function.Body,innerEnv)
+	return unwrapReturnValue(rv)
+
+}
+func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Environment {
+
+	env := object.NewEnclosedEnvironment(fn.Env)
+
+	for index, param := range fn.Parameters {
+		env.Set(param.Value, args[index])
+	}
+	return env
+}
+func unwrapReturnValue(obj object.Object) object.Object{
+	if rv,ok := obj.(*object.ReturnValue);ok{
+		return rv.Value
+	}
+	return obj
 }
 func nativeBoolToBooleanObject(input bool) *object.Boolean {
 	if input {

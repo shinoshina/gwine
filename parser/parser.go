@@ -335,7 +335,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 
 }
 
-// we may add this method to parseStatement for recursion call
+// may add this method to parseStatement for recursion call
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	block := &ast.BlockStatement{Token: p.curToken}
 	block.Statements = make([]ast.Statement, 0)
