@@ -20,7 +20,9 @@ func TestEva(t *testing.T) {
 
 	program := p.ParseProgram()
 
-	obj := Eval(program)
+	env  := object.NewEnvironment()
+	obj := Eval(program,env)
+
 
 	obj2, _ := obj.(*object.Integer)
 
@@ -37,7 +39,9 @@ func TestBoolean(t *testing.T) {
 
 	program := p.ParseProgram()
 
-	obj := Eval(program)
+	env  := object.NewEnvironment()
+	obj := Eval(program,env)
+
 
 	obj2, _ := obj.(*object.Boolean)
 
@@ -54,7 +58,9 @@ func TestPrefixExpressionBoolean(t *testing.T) {
 
 	program := p.ParseProgram()
 
-	obj := Eval(program)
+	env  := object.NewEnvironment()
+	obj := Eval(program,env)
+
 
 	obj2, _ := obj.(*object.Boolean)
 
@@ -70,8 +76,8 @@ func TestPrefixExpressionMinus(t *testing.T) {
 	p := parser.New(l)
 
 	program := p.ParseProgram()
-
-	obj := Eval(program)
+    env  := object.NewEnvironment()
+	obj := Eval(program,env)
 
 	obj2, _ := obj.(*object.Integer)
 

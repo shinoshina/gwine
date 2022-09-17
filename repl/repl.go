@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gwine/evaluator"
 	"gwine/lexer"
+	"gwine/object"
 	"gwine/parser"
 	"io"
 )
@@ -12,6 +13,7 @@ import (
 func Start(in io.Reader,out io.Writer){
 
 	sc := bufio.NewScanner(in)
+	env  := object.NewEnvironment()
 	
 	for {
 
@@ -25,9 +27,10 @@ func Start(in io.Reader,out io.Writer){
 		p := parser.New(l)
 		program := p.ParseProgram()
 		//fmt.Fprintln(out,program.String())
+		
 	
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program,env)
 		if evaluated != nil {
 			io.WriteString(out,evaluated.Inspect())
             io.WriteString(out,"\n")
