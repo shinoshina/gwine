@@ -26,6 +26,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return val
 		}
 		return &object.ReturnValue{Value: val}
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	case *ast.LetStatement:
 		val := Eval(node.Value, env)
 		if isError(val) {
@@ -49,7 +51,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if len(args) == 1 && isError(args[0]) {
 			return args[0]
 		}
-		return applyFunction(function,args)
+		return applyFunction(function, args)
 	case *ast.PrefixExpression:
 		right := Eval(node.Right, env)
 		if isError(right) {
@@ -233,8 +235,8 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 		return newError("%v not a function", function.Type())
 	}
 
-	innerEnv := extendFunctionEnv(function,args)
-	rv := Eval(function.Body,innerEnv)
+	innerEnv := extendFunctionEnv(function, args)
+	rv := Eval(function.Body, innerEnv)
 	return unwrapReturnValue(rv)
 
 }
@@ -247,8 +249,8 @@ func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Enviro
 	}
 	return env
 }
-func unwrapReturnValue(obj object.Object) object.Object{
-	if rv,ok := obj.(*object.ReturnValue);ok{
+func unwrapReturnValue(obj object.Object) object.Object {
+	if rv, ok := obj.(*object.ReturnValue); ok {
 		return rv.Value
 	}
 	return obj
