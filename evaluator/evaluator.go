@@ -142,6 +142,8 @@ func evalInflixExpression(operator string, left, right object.Object) object.Obj
 		return newError("type mismatch: %s %s %s", left.Type(), operator, right.Type())
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalIntegerInflixExpression(operator, left, right)
+	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
+		return evalStringInflixExpression(operator, left, right)
 	case operator == "==":
 		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
@@ -163,6 +165,15 @@ func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Obje
 	} else {
 		return NULL
 	}
+}
+func evalStringInflixExpression(operator string, left, right object.Object) object.Object {
+	if operator != "+" {
+		return newError("string operator dismatch: %v %v %v", left.Type(), operator, right.Type())
+	}
+
+	lv := left.(*object.String).Value
+	rv := right.(*object.String).Value
+	return &object.String{Value: lv + rv}
 }
 func evalIntegerInflixExpression(operator string, left, right object.Object) object.Object {
 	leftValue, rightValue := left.(*object.Integer).Value, right.(*object.Integer).Value
