@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gwine/ast"
 	"gwine/object"
-
 )
 
 var (
@@ -44,11 +43,22 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		body := node.Body
 		return &object.Function{Parameters: params, Env: env, Body: body}
 	case *ast.ArrayLiteral:
-		elements := evalArgs(node.Elements,env)
+		elements := evalArgs(node.Elements, env)
 		if len(elements) == 1 && isError(elements[0]) {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements}
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
+
 	case *ast.CallExpression:
 		function := Eval(node.Function, env)
 		if isError(function) {
@@ -250,6 +260,21 @@ func evalArgs(args []ast.Expression, env *object.Environment) []object.Object {
 		objs = append(objs, o)
 	}
 	return objs
+}
+func evalIndexExpression(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		l := left.(*object.Array)
+		i := index.(*object.Integer).Value
+
+		if i < 0 || i > int64(len(l.Elements)-1) {
+			return NULL
+		}
+	
+		return l.Elements[i]
+	default:
+		return newError("array index dismatch")
+	}
 }
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 
