@@ -15,10 +15,12 @@ const (
 	STRING_OBJ  = "STRING"
 	NULL_OBJ    = "NULL"
 
+	ARRAY_OBJ = "ARRAY"
+
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 
 	FUNCTION_OBJ = "FUNCTION"
-	BUILTIN_OBJ = "BUILTIN"
+	BUILTIN_OBJ  = "BUILTIN"
 
 	ERROR_OBJ = "ERROR"
 )
@@ -92,10 +94,29 @@ type String struct {
 func (s *String) Type() ObjectType { return STRING_OBJ }
 func (s *String) Inspect() string  { return s.Value }
 
-
-type BuiltinFunction func(args... Object) Object
-type Builtin struct{
+type BuiltinFunction func(args ...Object) Object
+type Builtin struct {
 	Fn BuiltinFunction
 }
-func (b *Builtin) Type() ObjectType {return BUILTIN_OBJ}
-func (b *Builtin) Inspect() string {return "builtin function"}
+
+func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
+func (b *Builtin) Inspect() string  { return "builtin function" }
+
+type Array struct {
+	Elements []Object
+}
+
+func (a *Array) Type() ObjectType {return ARRAY_OBJ}
+func (a *Array) Inspect()string {
+	var out bytes.Buffer
+
+	elements := []string{}
+
+	for _ , el := range a.Elements{
+		elements = append(elements, el.Inspect())
+	}
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements,","))
+	out.WriteString("]")
+	return out.String()
+}
