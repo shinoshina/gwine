@@ -63,7 +63,11 @@ func StartForVm(in io.Reader,out io.Writer){
 		}
 
 		vm := vm.New(compiler.ByteCode())
-		vm.Run()
+		err = vm.Run()
+		if err != nil{
+			fmt.Println(err)
+		}
+
 
 		// st := vm.Top()
 		// io.WriteString(out,st.Inspect() + "\n")

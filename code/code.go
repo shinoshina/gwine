@@ -22,15 +22,31 @@ const (
 	OpMul
 	OpDiv
 	OpPop
+
+	OpTrue
+	OpFalse
+
+	OpEqual
+	OpNEqual
+	OpGT
+	OpLT
 )
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
-	OpAdd: {"OpAdd",[]int{}},
-	OpSub: {"OpSub",[]int{}},
-	OpMul: {"OpMul",[]int{}},
-	OpDiv: {"OpDiv",[]int{}},
-	OpPop: {"OpPop",[]int{}},
+	OpAdd:      {"OpAdd", []int{}},
+	OpSub:      {"OpSub", []int{}},
+	OpMul:      {"OpMul", []int{}},
+	OpDiv:      {"OpDiv", []int{}},
+	OpPop:      {"OpPop", []int{}},
+
+	OpTrue:  {"OpTrue", []int{}},
+	OpFalse: {"OpFalse", []int{}},
+
+	OpEqual:  {"OpEqual", []int{}},
+	OpNEqual:  {"OpNEqual", []int{}},
+	OpGT:  {"OpGT", []int{}},
+	OpLT:  {"OpLT", []int{}},
 }
 
 func Make(op Opcode, operands ...int) []byte {

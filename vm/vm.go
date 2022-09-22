@@ -66,11 +66,26 @@ func (vm *VM) Run() error {
 			}
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
 			err := vm.executeBinaryOperation(op)
+			if err != nil {
+				return err
+			}
+		case code.OpEqual ,code.OpNEqual,code.OpGT,code.OpLT:
+			err := vm.executeComparison(op)
 			if err != nil{
 				return err
 			}
 		case code.OpPop:
 			vm.pop()
+		case code.OpTrue:
+			err := vm.push(object.True)
+			if err != nil {
+				return err
+			}
+		case code.OpFalse:
+			err := vm.push(object.False)
+			if err != nil {
+				return err
+			}
 		}
 
 	}
@@ -82,6 +97,7 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 	l := vm.pop()
 
 	if r.Type() != object.INTEGER_OBJ || l.Type() != object.INTEGER_OBJ {
+
 		return fmt.Errorf("operator %d operand %s , %s type dismatch", op, r.Type(), l.Type())
 	}
 
@@ -99,7 +115,49 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 	case code.OpDiv:
 		result = lv / rv
 	default:
-		return fmt.Errorf("unknown operator %d",op)
+		return fmt.Errorf("unknown operator %d", op)
 	}
 	return vm.push(&object.Integer{Value: result})
+}
+func (vm *VM) executeComparison(op code.Opcode) error{
+
+	r := vm.pop()
+	l := vm.pop()
+
+
+	if l.Type() == object.INTEGER_OBJ && r.Type() == object.INTEGER_OBJ {
+		lv := l.(*object.Integer).Value
+		rv := r.(*object.Integer).Value
+		
+		switch op{
+		case code.OpEqual:
+			return vm.push(nativeBoolToBooleanObject(lv == rv))
+		case code.OpNEqual:
+			return vm.push(nativeBoolToBooleanObject(lv != rv))
+		case code.OpGT:
+			return vm.push(nativeBoolToBooleanObject(lv > rv))
+		case code.OpLT:
+			return vm.push(nativeBoolToBooleanObject(lv < rv))
+		default:
+			return fmt.Errorf("unknown operator %d",op)
+		}
+	}
+
+	switch op{
+	case code.OpEqual:
+		return vm.push(nativeBoolToBooleanObject(l == r))
+	case code.OpNEqual:
+		return vm.push(nativeBoolToBooleanObject(l != r))
+	default:
+		return fmt.Errorf("unknown operator %d",op)
+	}
+
+
+}
+func nativeBoolToBooleanObject(input bool) *object.Boolean{
+	if input {
+		return object.True
+	}else {
+		return object.False
+	}
 }

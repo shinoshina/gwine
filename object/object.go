@@ -24,6 +24,8 @@ const (
 
 	ERROR_OBJ = "ERROR"
 )
+var True = &Boolean{Value: true}
+var False = &Boolean{Value: false}
 
 type Object interface {
 	Type() ObjectType
