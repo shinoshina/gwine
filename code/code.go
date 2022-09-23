@@ -30,6 +30,12 @@ const (
 	OpNEqual
 	OpGT
 	OpLT
+
+	OpMinus
+	OpBang
+
+	OpJumpIfNotTrue
+	OpJump
 )
 
 var definitions = map[Opcode]*Definition{
@@ -47,6 +53,12 @@ var definitions = map[Opcode]*Definition{
 	OpNEqual:  {"OpNEqual", []int{}},
 	OpGT:  {"OpGT", []int{}},
 	OpLT:  {"OpLT", []int{}},
+
+	OpMinus: {"OpMinus", []int{}},
+	OpBang: {"OpBang", []int{}},
+
+	OpJumpIfNotTrue: {"OpJumpIfNotTrue",[]int{2}},
+	OpJump: {"OpJump",[]int{2}},
 }
 
 func Make(op Opcode, operands ...int) []byte {

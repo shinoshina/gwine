@@ -5,6 +5,8 @@ import (
 	"gwine/code"
 	"gwine/compiler"
 	"gwine/object"
+
+
 )
 
 const StackSize = 2048
@@ -71,6 +73,16 @@ func (vm *VM) Run() error {
 			}
 		case code.OpEqual ,code.OpNEqual,code.OpGT,code.OpLT:
 			err := vm.executeComparison(op)
+			if err != nil{
+				return err
+			}
+		case code.OpBang:
+			err := vm.executeBangOperator()
+			if err != nil{
+				return err
+			}
+		case code.OpMinus:
+			err := vm.executeMinusOperator()
 			if err != nil{
 				return err
 			}
@@ -151,8 +163,26 @@ func (vm *VM) executeComparison(op code.Opcode) error{
 	default:
 		return fmt.Errorf("unknown operator %d",op)
 	}
+}
+func (vm *VM) executeBangOperator() error{
+	operand := vm.pop()
 
-
+	switch operand{
+	case object.True:
+		return vm.push(object.False)
+	case object.False:
+		return vm.push(object.True)
+	default:
+		return vm.push(object.False)
+	}
+}
+func (vm *VM) executeMinusOperator() error{
+	operand := vm.pop()
+	if operand.Type() != object.INTEGER_OBJ {
+		return fmt.Errorf("unsupported type %s for -",operand.Type())
+	}
+	v := operand.(*object.Integer).Value
+	return vm.push(&object.Integer{Value: -v})
 }
 func nativeBoolToBooleanObject(input bool) *object.Boolean{
 	if input {
