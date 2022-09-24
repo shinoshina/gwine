@@ -5,8 +5,6 @@ import (
 	"gwine/code"
 	"gwine/compiler"
 	"gwine/object"
-
-
 )
 
 const StackSize = 2048
@@ -98,7 +96,18 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpJump:
+			jumpto := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip = jumpto - 1
+		case code.OpJumpIfNotTrue:
+			jumpto := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2
+			condition := vm.pop()
+			if !isTrue(condition){
+				ip = jumpto - 1
+			}
 		}
+		
 
 	}
 	return nil
@@ -190,4 +199,14 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean{
 	}else {
 		return object.False
 	}
+}
+func isTrue(obj object.Object) bool{
+
+	switch obj := obj.(type){
+	case *object.Boolean:
+		return obj.Value
+	default:
+		return true
+	}
+
 }
