@@ -64,6 +64,11 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpNull:
+			err := vm.push(object.NullObj)
+			if err != nil{
+				return err
+			}
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
 			err := vm.executeBinaryOperation(op)
 			if err != nil {
@@ -181,6 +186,8 @@ func (vm *VM) executeBangOperator() error{
 		return vm.push(object.False)
 	case object.False:
 		return vm.push(object.True)
+	case object.NullObj:
+		return vm.push(object.True)
 	default:
 		return vm.push(object.False)
 	}
@@ -205,6 +212,8 @@ func isTrue(obj object.Object) bool{
 	switch obj := obj.(type){
 	case *object.Boolean:
 		return obj.Value
+	case *object.Null:
+		return false
 	default:
 		return true
 	}

@@ -26,6 +26,7 @@ const (
 )
 var True = &Boolean{Value: true}
 var False = &Boolean{Value: false}
+var NullObj = &Null{}
 
 type Object interface {
 	Type() ObjectType

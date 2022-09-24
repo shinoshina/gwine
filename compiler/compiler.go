@@ -120,7 +120,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		if node.Alternative != nil {
 			jumpPos := c.emit(code.OpJump, 9999)
-			
+
 			consequenceEndpos := len(c.instructions)
 			c.changeOperand(jumpIfNotTruePos, consequenceEndpos)
 
@@ -134,6 +134,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 			alternativeEndpos := len(c.instructions)
 			c.changeOperand(jumpPos, alternativeEndpos)
+		}else {
+			c.emit(code.OpNull)
 		}
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
