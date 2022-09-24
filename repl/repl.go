@@ -40,6 +40,10 @@ func StartForInterpreter(in io.Reader,out io.Writer){
 func StartForVm(in io.Reader,out io.Writer){
 
 	sc := bufio.NewScanner(in)
+
+	constants := []object.Object{}
+	globals := make([]object.Object,vm.GlobalsSize)
+	symboltbl := compiler.NewSymbolTable()
 	
 	
 	for {
@@ -55,15 +59,16 @@ func StartForVm(in io.Reader,out io.Writer){
 		program := p.ParseProgram()
 		//fmt.Fprintln(out,program.String())
 	
-		compiler := compiler.New()
-		err := compiler.Compile(program)
-		if err != nil{
-			fmt.Fprintf(out,"compile fail\n %s \n",err)
+		comp := compiler.NewWithState(symboltbl, constants)
+		err := comp.Compile(program)
+		if err != nil {
+			fmt.Fprintf(out, "compile fail")
 			continue
 		}
-
-		vm := vm.New(compiler.ByteCode())
-		err = vm.Run()
+		code := comp.ByteCode()
+		constants = code.Constants
+		vmm := vm.NewWithGlobalStore(code,globals)
+		err = vmm.Run()
 		if err != nil{
 			fmt.Println(err)
 		}
@@ -71,7 +76,7 @@ func StartForVm(in io.Reader,out io.Writer){
 
 		// st := vm.Top()
 		// io.WriteString(out,st.Inspect() + "\n")
-		io.WriteString(out,vm.LastPoped().Inspect()+ "\n")
+		io.WriteString(out,vmm.LastPoped().Inspect()+ "\n")
 
 	}
 }

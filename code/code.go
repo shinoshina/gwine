@@ -38,12 +38,15 @@ const (
 
 	OpJumpIfNotTrue
 	OpJump
+
+	OpGetGlobal
+	OpSetGlobal
 )
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
 	OpNull:{"OpNull",[]int{}},
-	
+
 	OpAdd:      {"OpAdd", []int{}},
 	OpSub:      {"OpSub", []int{}},
 	OpMul:      {"OpMul", []int{}},
@@ -63,6 +66,9 @@ var definitions = map[Opcode]*Definition{
 
 	OpJumpIfNotTrue: {"OpJumpIfNotTrue",[]int{2}},
 	OpJump: {"OpJump",[]int{2}},
+
+	OpGetGlobal: {"OpGetGlobal",[]int{2}},
+	OpSetGlobal: {"OpSetGlobal",[]int{2}},
 }
 
 func Make(op Opcode, operands ...int) []byte {

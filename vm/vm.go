@@ -8,6 +8,7 @@ import (
 )
 
 const StackSize = 2048
+const GlobalsSize = 65536
 
 type VM struct {
 	instructions code.Instructions
@@ -15,6 +16,8 @@ type VM struct {
 
 	stack []object.Object
 	sp    int // offset of top object + 1 , 0 refers  stack empty
+
+	globals []object.Object
 }
 
 func New(bytecode *compiler.Bytecode) *VM {
@@ -24,6 +27,18 @@ func New(bytecode *compiler.Bytecode) *VM {
 
 		stack: make([]object.Object, StackSize),
 		sp:    0,
+
+		globals: make([]object.Object, GlobalsSize),
+	}
+}
+func NewWithGlobalStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
+	return &VM{
+		instructions: bytecode.Instructions,
+		constants:    bytecode.Constants,
+
+		stack:   make([]object.Object, StackSize),
+		sp:      0,
+		globals: s,
 	}
 }
 func (vm *VM) Top() object.Object {
@@ -66,7 +81,7 @@ func (vm *VM) Run() error {
 			}
 		case code.OpNull:
 			err := vm.push(object.NullObj)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
@@ -74,19 +89,19 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
-		case code.OpEqual ,code.OpNEqual,code.OpGT,code.OpLT:
+		case code.OpEqual, code.OpNEqual, code.OpGT, code.OpLT:
 			err := vm.executeComparison(op)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case code.OpBang:
 			err := vm.executeBangOperator()
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case code.OpMinus:
 			err := vm.executeMinusOperator()
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case code.OpPop:
@@ -108,11 +123,21 @@ func (vm *VM) Run() error {
 			jumpto := int(code.ReadUint16(vm.instructions[ip+1:]))
 			ip += 2
 			condition := vm.pop()
-			if !isTrue(condition){
+			if !isTrue(condition) {
 				ip = jumpto - 1
 			}
+		case code.OpSetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+			vm.globals[globalIndex] = vm.pop()
+		case code.OpGetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+			err := vm.push(vm.globals[globalIndex])
+			if err != nil {
+				return err
+			}
 		}
-		
 
 	}
 	return nil
@@ -145,17 +170,16 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 	}
 	return vm.push(&object.Integer{Value: result})
 }
-func (vm *VM) executeComparison(op code.Opcode) error{
+func (vm *VM) executeComparison(op code.Opcode) error {
 
 	r := vm.pop()
 	l := vm.pop()
 
-
 	if l.Type() == object.INTEGER_OBJ && r.Type() == object.INTEGER_OBJ {
 		lv := l.(*object.Integer).Value
 		rv := r.(*object.Integer).Value
-		
-		switch op{
+
+		switch op {
 		case code.OpEqual:
 			return vm.push(nativeBoolToBooleanObject(lv == rv))
 		case code.OpNEqual:
@@ -165,23 +189,23 @@ func (vm *VM) executeComparison(op code.Opcode) error{
 		case code.OpLT:
 			return vm.push(nativeBoolToBooleanObject(lv < rv))
 		default:
-			return fmt.Errorf("unknown operator %d",op)
+			return fmt.Errorf("unknown operator %d", op)
 		}
 	}
 
-	switch op{
+	switch op {
 	case code.OpEqual:
 		return vm.push(nativeBoolToBooleanObject(l == r))
 	case code.OpNEqual:
 		return vm.push(nativeBoolToBooleanObject(l != r))
 	default:
-		return fmt.Errorf("unknown operator %d",op)
+		return fmt.Errorf("unknown operator %d", op)
 	}
 }
-func (vm *VM) executeBangOperator() error{
+func (vm *VM) executeBangOperator() error {
 	operand := vm.pop()
 
-	switch operand{
+	switch operand {
 	case object.True:
 		return vm.push(object.False)
 	case object.False:
@@ -192,24 +216,24 @@ func (vm *VM) executeBangOperator() error{
 		return vm.push(object.False)
 	}
 }
-func (vm *VM) executeMinusOperator() error{
+func (vm *VM) executeMinusOperator() error {
 	operand := vm.pop()
 	if operand.Type() != object.INTEGER_OBJ {
-		return fmt.Errorf("unsupported type %s for -",operand.Type())
+		return fmt.Errorf("unsupported type %s for -", operand.Type())
 	}
 	v := operand.(*object.Integer).Value
 	return vm.push(&object.Integer{Value: -v})
 }
-func nativeBoolToBooleanObject(input bool) *object.Boolean{
+func nativeBoolToBooleanObject(input bool) *object.Boolean {
 	if input {
 		return object.True
-	}else {
+	} else {
 		return object.False
 	}
 }
-func isTrue(obj object.Object) bool{
+func isTrue(obj object.Object) bool {
 
-	switch obj := obj.(type){
+	switch obj := obj.(type) {
 	case *object.Boolean:
 		return obj.Value
 	case *object.Null:
