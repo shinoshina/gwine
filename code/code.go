@@ -18,6 +18,9 @@ type Definition struct {
 const (
 	OpConstant Opcode = iota
 	OpNull
+	OpArray
+	OpHash
+	OpIndex
 
 	OpAdd
 	OpSub
@@ -45,30 +48,33 @@ const (
 
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{2}},
-	OpNull:{"OpNull",[]int{}},
+	OpNull:     {"OpNull", []int{}},
+	OpArray:    {"OpArray", []int{2}},
+	OpHash:     {"OpHash", []int{2}},
+	OpIndex:    {"OpIndex", []int{}},
 
-	OpAdd:      {"OpAdd", []int{}},
-	OpSub:      {"OpSub", []int{}},
-	OpMul:      {"OpMul", []int{}},
-	OpDiv:      {"OpDiv", []int{}},
-	OpPop:      {"OpPop", []int{}},
+	OpAdd: {"OpAdd", []int{}},
+	OpSub: {"OpSub", []int{}},
+	OpMul: {"OpMul", []int{}},
+	OpDiv: {"OpDiv", []int{}},
+	OpPop: {"OpPop", []int{}},
 
 	OpTrue:  {"OpTrue", []int{}},
 	OpFalse: {"OpFalse", []int{}},
 
 	OpEqual:  {"OpEqual", []int{}},
-	OpNEqual:  {"OpNEqual", []int{}},
-	OpGT:  {"OpGT", []int{}},
-	OpLT:  {"OpLT", []int{}},
+	OpNEqual: {"OpNEqual", []int{}},
+	OpGT:     {"OpGT", []int{}},
+	OpLT:     {"OpLT", []int{}},
 
 	OpMinus: {"OpMinus", []int{}},
-	OpBang: {"OpBang", []int{}},
+	OpBang:  {"OpBang", []int{}},
 
-	OpJumpIfNotTrue: {"OpJumpIfNotTrue",[]int{2}},
-	OpJump: {"OpJump",[]int{2}},
+	OpJumpIfNotTrue: {"OpJumpIfNotTrue", []int{2}},
+	OpJump:          {"OpJump", []int{2}},
 
-	OpGetGlobal: {"OpGetGlobal",[]int{2}},
-	OpSetGlobal: {"OpSetGlobal",[]int{2}},
+	OpGetGlobal: {"OpGetGlobal", []int{2}},
+	OpSetGlobal: {"OpSetGlobal", []int{2}},
 }
 
 func Make(op Opcode, operands ...int) []byte {

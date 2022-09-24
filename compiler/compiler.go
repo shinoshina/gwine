@@ -5,6 +5,7 @@ import (
 	"gwine/ast"
 	"gwine/code"
 	"gwine/object"
+	"sort"
 )
 
 type Compiler struct {
@@ -31,16 +32,16 @@ func New() *Compiler {
 		constants:           []object.Object{},
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
-		symbolTable: NewSymbolTable(),
+		symbolTable:         NewSymbolTable(),
 	}
 }
-func NewWithState(st *SymbolTable,constants []object.Object) *Compiler{
+func NewWithState(st *SymbolTable, constants []object.Object) *Compiler {
 	return &Compiler{
-		instructions: code.Instructions{},
-		constants: constants,
-		lastInstruction: EmittedInstruction{},
+		instructions:        code.Instructions{},
+		constants:           constants,
+		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
-		symbolTable: st,
+		symbolTable:         st,
 	}
 }
 func (c *Compiler) ByteCode() *Bytecode {
@@ -60,11 +61,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 	case *ast.LetStatement:
 		err := c.Compile(node.Value)
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		symbol := c.symbolTable.Define(node.Name.Value)
-		c.emit(code.OpSetGlobal,symbol.Index)
+		c.emit(code.OpSetGlobal, symbol.Index)
 	case *ast.ExpressionStatement:
 		err := c.Compile(node.Expression)
 		if err != nil {
@@ -126,6 +127,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 		jumpIfNotTruePos := c.emit(code.OpJumpIfNotTrue, 9999)
+
 		err = c.Compile(node.Consequence)
 		if err != nil {
 			return err
@@ -134,14 +136,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.removeLastPop()
 		}
 
+		jumpPos := c.emit(code.OpJump, 9999)
 		consequenceEndpos := len(c.instructions)
 		c.changeOperand(jumpIfNotTruePos, consequenceEndpos)
 
 		if node.Alternative != nil {
-			jumpPos := c.emit(code.OpJump, 9999)
-
-			consequenceEndpos := len(c.instructions)
-			c.changeOperand(jumpIfNotTruePos, consequenceEndpos)
 
 			err := c.Compile(node.Alternative)
 			if err != nil {
@@ -151,14 +150,55 @@ func (c *Compiler) Compile(node ast.Node) error {
 			if c.lastInstructionIsPop() {
 				c.removeLastPop()
 			}
-			alternativeEndpos := len(c.instructions)
-			c.changeOperand(jumpPos, alternativeEndpos)
-		}else {
+		} else {
 			c.emit(code.OpNull)
 		}
+		alternativeEndpos := len(c.instructions)
+		c.changeOperand(jumpPos, alternativeEndpos)
+	case *ast.IndexExpression:
+		err := c.Compile(node.Left)
+		if err != nil{
+			return err
+		}
+		err = c.Compile(node.Index)
+		if err != nil{
+			return err
+		}
+		c.emit(code.OpIndex)
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(integer))
+	case *ast.StringLiteral:
+		sv := &object.String{Value: node.Value}
+		c.emit(code.OpConstant, c.addConstant(sv))
+	case *ast.ArrayLiteral:
+		for _, el := range node.Elements {
+			err := c.Compile(el)
+			if err != nil {
+				return err
+			}
+		}
+		c.emit(code.OpArray, len(node.Elements))
+	case *ast.HashLiteral:
+		keys := []ast.Expression{}
+		for k := range node.Paris{
+			keys = append(keys, k)
+		}
+		// for a ordered k-v
+		sort.Slice(keys,func(i,j int)bool{
+			return keys[i].String() < keys[j].String()
+		})
+		for _,k := range keys{
+			err := c.Compile(k)
+			if err != nil{
+				return err
+			}
+			err = c.Compile(node.Paris[k])
+			if err != nil{
+				return err
+			}
+		}
+		c.emit(code.OpHash,len(node.Paris)*2)
 	case *ast.Boolean:
 		if node.Value {
 			c.emit(code.OpTrue)
@@ -166,11 +206,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpFalse)
 		}
 	case *ast.Identifier:
-		symbol , ok := c.symbolTable.Resolve(node.Value)
-		if !ok{
-			return fmt.Errorf("undefined variable %s",node.Value)
+		symbol, ok := c.symbolTable.Resolve(node.Value)
+		if !ok {
+			return fmt.Errorf("undefined variable %s", node.Value)
 		}
-		c.emit(code.OpGetGlobal,symbol.Index)
+		c.emit(code.OpGetGlobal, symbol.Index)
 	}
 
 	return nil

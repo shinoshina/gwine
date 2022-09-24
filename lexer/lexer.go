@@ -71,6 +71,8 @@ func (l *Lexer) NextToken() token.Token {
 		t.Type = token.COMMA
 	case ';':
 		t.Type = token.SEMICOLON
+	case ':':
+		t.Type = token.COLON
 	case '(':
 		t.Type = token.LPAREN
 	case ')':
@@ -120,11 +122,11 @@ func (l *Lexer) readNumber() string {
 	}
 	return l.input[p:l.position]
 }
-func (l *Lexer) readString() string{
+func (l *Lexer) readString() string {
 	p := l.position + 1
 	for {
 		l.readChar()
-		if l.ch == '"' || l.ch == 0{
+		if l.ch == '"' || l.ch == 0 {
 			break
 		}
 	}
