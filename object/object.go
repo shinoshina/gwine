@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"gwine/ast"
+	"gwine/code"
 	"hash/fnv"
 	"strings"
 )
@@ -20,8 +21,9 @@ const (
 
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 
-	FUNCTION_OBJ = "FUNCTION"
-	BUILTIN_OBJ  = "BUILTIN"
+	FUNCTION_OBJ          = "FUNCTION"
+	BUILTIN_OBJ           = "BUILTIN"
+	COMPILED_FUNCTION_OBJ = "COMPILED_FUNCTION"
 
 	ERROR_OBJ = "ERROR"
 )
@@ -90,6 +92,15 @@ func (f *Function) Inspect() string {
 	out.WriteString("\n}")
 
 	return out.String()
+}
+
+type CompiledFunction struct {
+	Instructions code.Instructions
+}
+
+func (cf *CompiledFunction) Type() ObjectType{return COMPILED_FUNCTION_OBJ}
+func (cf *CompiledFunction) Inspect()string{
+	return fmt.Sprintf("Compiled function[%p]",cf)
 }
 
 type String struct {
@@ -170,7 +181,7 @@ func (h *Hash) Inspect() string {
 		pairs = append(pairs, fmt.Sprintf("%s: %s", pair.Key.Inspect(), pair.Value.Inspect()))
 	}
 	out.WriteString("{")
-	out.WriteString(strings.Join(pairs,", "))
+	out.WriteString(strings.Join(pairs, ", "))
 	out.WriteString("}")
 	return out.String()
 }
