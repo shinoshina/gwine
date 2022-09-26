@@ -193,7 +193,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
-		c.emit(code.OpCall)
+		for _ ,a := range node.Arguments{
+			err = c.Compile(a)
+			if err != nil{
+				return err
+			}
+		}
+		c.emit(code.OpCall,len(node.Arguments))
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(integer))
@@ -230,18 +236,28 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(code.OpHash, len(node.Paris)*2)
 	case *ast.FunctionLiteral:
 		c.enterScope()
+
+		for _,p := range node.Parameters{
+			c.symbolTable.Define(p.Value)
+		}
 		err := c.Compile(node.Body)
 		if err != nil {
 			return err
 		}
+
 		if c.lastInstructionIs(code.OpPop) {
 			c.replaceLastPopWithReturn()
 		}
 		if !c.lastInstructionIs(code.OpReturnValue) {
 			c.emit(code.OpReturn)
 		}
+		numLocals := c.symbolTable.numDefinitions
 		ins := c.leaveScope()
-		compiledFn := &object.CompiledFunction{Instructions: ins}
+		compiledFn := &object.CompiledFunction{
+			Instructions: ins,
+			NumLocals:    numLocals,
+			NumParameters: len(node.Parameters),
+		}
 		c.emit(code.OpConstant, c.addConstant(compiledFn))
 	case *ast.Boolean:
 		if node.Value {
@@ -276,6 +292,8 @@ func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 	// add instruction
 	posNewInstruction := len(c.currentInstructions())
 	c.scopes[c.scopeIndex].instructions = append(c.scopes[c.scopeIndex].instructions, ins...)
+
+	c.setLastInstruction(op, posNewInstruction)
 
 	return posNewInstruction
 }
