@@ -1,0 +1,7 @@
+let a = fn(x,f){
+    return f(f(f(x)))
+}
+let first = fn(x){
+    return x[0];
+}
+let c = a([[[[3,2],2],2,3],2,3],first)

@@ -72,11 +72,8 @@ func StartForVm(in io.Reader,out io.Writer){
 		if err != nil{
 			fmt.Println(err)
 		}
-
-
 		// st := vm.Top()
 		// io.WriteString(out,st.Inspect() + "\n")
 		io.WriteString(out,vmm.LastPoped().Inspect()+ "\n")
-
 	}
 }
