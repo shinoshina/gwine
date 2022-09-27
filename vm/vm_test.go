@@ -14,8 +14,11 @@ func TestArrayinHash(t *testing.T) {
 	constants := []object.Object{}
 	globals := make([]object.Object, GlobalsSize)
 	symboltbl := compiler.NewSymbolTable()
+	for i, v := range object.Builtins {
+		symboltbl.DefineBuiltin(i, v.Name)
+	}
 
-	l := lexer.New(`let a = {1:[1,2,3]}`)
+	l := lexer.New(`len([1,2,3])`)
 	p := parser.New(l)
 	program := p.ParseProgram()
 	//fmt.Fprintln(out,program.String())

@@ -187,3 +187,8 @@ func (h *Hash) Inspect() string {
 	out.WriteString("}")
 	return out.String()
 }
+
+
+func newError(format string, a ...interface{}) *Error {
+	return &Error{Message: fmt.Sprintf(format, a...)}
+}

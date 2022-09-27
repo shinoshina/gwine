@@ -1,8 +1,8 @@
 package main
 
 import (
-
 	"gwine/repl"
+	"os"
 )
 
 func main() {
@@ -10,6 +10,6 @@ func main() {
 	// if err != nil {
 	// 	fmt.Errorf("kksk")
 	// }
-	// repl.StartForVm(os.Stdin, os.Stdout)
-	repl.FromFile("test.gwine")
+	repl.StartForVm(os.Stdin, os.Stdout)
+	// repl.FromFile("test.gwine")
 }

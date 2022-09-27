@@ -21,6 +21,7 @@ const (
 	OpArray
 	OpHash
 	OpIndex
+	OpGetBuiltin
 
 	OpAdd
 	OpSub
@@ -57,6 +58,7 @@ var definitions = map[Opcode]*Definition{
 	OpArray:    {"OpArray", []int{2}},
 	OpHash:     {"OpHash", []int{2}},
 	OpIndex:    {"OpIndex", []int{}},
+	OpGetBuiltin: {"OpGetBuiltin",[]int{1}},
 
 	OpAdd: {"OpAdd", []int{}},
 	OpSub: {"OpSub", []int{}},

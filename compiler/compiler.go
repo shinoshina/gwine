@@ -36,11 +36,15 @@ func New() *Compiler {
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
 	}
+	SymbolTable := NewSymbolTable()
+	for i, v := range object.Builtins {
+		SymbolTable.DefineBuiltin(i, v.Name)
+	}
 	return &Compiler{
 		constants:   []object.Object{},
 		scopes:      []CompilationScope{mainScope},
 		scopeIndex:  0,
-		symbolTable: NewSymbolTable(),
+		symbolTable: SymbolTable,
 	}
 }
 
@@ -193,13 +197,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
-		for _ ,a := range node.Arguments{
+		for _, a := range node.Arguments {
 			err = c.Compile(a)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		}
-		c.emit(code.OpCall,len(node.Arguments))
+		c.emit(code.OpCall, len(node.Arguments))
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(integer))
@@ -237,7 +241,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.FunctionLiteral:
 		c.enterScope()
 
-		for _,p := range node.Parameters{
+		for _, p := range node.Parameters {
 			c.symbolTable.Define(p.Value)
 		}
 		err := c.Compile(node.Body)
@@ -254,8 +258,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		numLocals := c.symbolTable.numDefinitions
 		ins := c.leaveScope()
 		compiledFn := &object.CompiledFunction{
-			Instructions: ins,
-			NumLocals:    numLocals,
+			Instructions:  ins,
+			NumLocals:     numLocals,
 			NumParameters: len(node.Parameters),
 		}
 		c.emit(code.OpConstant, c.addConstant(compiledFn))
@@ -274,6 +278,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpGetGlobal, symbol.Index)
 		} else if symbol.Scope == LocalScope {
 			c.emit(code.OpGetLocal, symbol.Index)
+		} else if symbol.Scope == BuiltinScope {
+			c.emit(code.OpGetBuiltin, symbol.Index)
 		}
 	}
 
