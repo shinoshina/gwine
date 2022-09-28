@@ -18,6 +18,7 @@ const (
 	NULL_OBJ    = "NULL"
 	HASH_OBJ    = "HASH"
 	ARRAY_OBJ   = "ARRAY"
+	CLOSURE_OBJ = "CLOSURE"
 
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 
@@ -191,4 +192,14 @@ func (h *Hash) Inspect() string {
 
 func newError(format string, a ...interface{}) *Error {
 	return &Error{Message: fmt.Sprintf(format, a...)}
+}
+
+
+type Closure struct{
+	Fn *CompiledFunction
+	Free []Object
+}
+func (c *Closure) Type() ObjectType{return CLOSURE_OBJ}
+func (c *Closure) Inspect() string{
+	return fmt.Sprintf("Closure[%p]",c)
 }

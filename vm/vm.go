@@ -25,7 +25,8 @@ type VM struct {
 
 func New(bytecode *compiler.Bytecode) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
-	mainFm := NewFrame(mainFn, 0)
+	mainClosure := &object.Closure{Fn: mainFn}
+	mainFm := NewFrame(mainClosure, 0)
 
 	frames := make([]*Frame, MaxFrames)
 	frames[0] = mainFm
@@ -44,7 +45,8 @@ func New(bytecode *compiler.Bytecode) *VM {
 }
 func NewWithGlobalStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
-	mainFm := NewFrame(mainFn, 0)
+	mainClosure := &object.Closure{Fn: mainFn}
+	mainFm := NewFrame(mainClosure, 0)
 
 	frames := make([]*Frame, MaxFrames)
 	frames[0] = mainFm
@@ -146,6 +148,31 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpClosure:
+			constIndex := code.ReadUint16(ins[ip+1:])
+			numFree := code.ReadUint8(ins[ip+3:])
+			vm.currentFrame().ip += 3
+
+			constants := vm.constants[constIndex]
+			fn, ok := constants.(*object.CompiledFunction)
+			if !ok {
+				return fmt.Errorf("not a function %+v:",fn)
+			}
+			frees := make([]object.Object,numFree)
+			for i := 0; i < int(numFree);i++{
+				frees[i] = vm.stack[vm.sp-int(numFree) + i]
+			}
+			vm.sp -= int(numFree)
+
+			err := vm.push(&object.Closure{Fn:fn,Free: frees})
+			if err != nil{
+				return err
+			}
+		case code.OpCurrentClosure:
+			err := vm.push(vm.currentFrame().cl)
+			if err != nil{
+				return err
+			}
 		case code.OpIndex:
 			index := vm.pop()
 			left := vm.pop()
@@ -198,19 +225,19 @@ func (vm *VM) Run() error {
 		case code.OpCall:
 			numArgs := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
-			fn := vm.stack[vm.sp-1-int(numArgs)]
+			callee := vm.stack[vm.sp-1-int(numArgs)]
 
-			switch fn := fn.(type) {
-			case *object.CompiledFunction:
-				if int(numArgs) != fn.NumParameters {
+			switch callee := callee.(type) {
+			case *object.Closure:
+				if int(numArgs) != callee.Fn.NumParameters {
 					return fmt.Errorf("wrong number of argument")
 				}
-				frame := NewFrame(fn, vm.sp-int(numArgs))
+				frame := NewFrame(callee, vm.sp-int(numArgs))
 				vm.pushFrame(frame)
-				vm.sp = frame.basePointer + fn.NumLocals
+				vm.sp = frame.basePointer + callee.Fn.NumLocals
 			case *object.Builtin:
 				args := vm.stack[vm.sp-int(numArgs) : vm.sp]
-				result := fn.Fn(args...)
+				result := callee.Fn(args...)
 				vm.sp = vm.sp - int(numArgs) - 1
 				if result != nil {
 					err := vm.push(result)
@@ -271,6 +298,14 @@ func (vm *VM) Run() error {
 			err := vm.push(def.Builtin)
 			if err != nil {
 				return nil
+			}
+		case code.OpGetFree:
+			freeIndex := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1
+			currentClosure := vm.currentFrame().cl
+			err := vm.push(currentClosure.Free[freeIndex])
+			if err != nil{
+				return err
 			}
 		}
 

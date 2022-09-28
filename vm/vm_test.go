@@ -18,7 +18,13 @@ func TestArrayinHash(t *testing.T) {
 		symboltbl.DefineBuiltin(i, v.Name)
 	}
 
-	l := lexer.New(`len([1,2,3])`)
+	l := lexer.New(`let a = fn(x){ 
+		let as = fn(b)
+		{
+			return x+b
+			};
+			return as;
+			}`)
 	p := parser.New(l)
 	program := p.ParseProgram()
 	//fmt.Fprintln(out,program.String())

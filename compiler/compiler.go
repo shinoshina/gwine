@@ -77,11 +77,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 	case *ast.LetStatement:
+		symbol := c.symbolTable.Define(node.Name.Value)
 		err := c.Compile(node.Value)
 		if err != nil {
 			return err
 		}
-		symbol := c.symbolTable.Define(node.Name.Value)
 		if symbol.Scope == GlobalScope {
 			c.emit(code.OpSetGlobal, symbol.Index)
 		} else if symbol.Scope == LocalScope {
@@ -241,6 +241,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.FunctionLiteral:
 		c.enterScope()
 
+		if node.Name != "" {
+			c.symbolTable.DefineFunctionName(node.Name)
+		}
 		for _, p := range node.Parameters {
 			c.symbolTable.Define(p.Value)
 		}
@@ -255,14 +258,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if !c.lastInstructionIs(code.OpReturnValue) {
 			c.emit(code.OpReturn)
 		}
+		freeSymbols := c.symbolTable.FreeSymbols
 		numLocals := c.symbolTable.numDefinitions
 		ins := c.leaveScope()
+		for _, s := range freeSymbols {
+			c.loadSymbol(s)
+		}
 		compiledFn := &object.CompiledFunction{
 			Instructions:  ins,
 			NumLocals:     numLocals,
 			NumParameters: len(node.Parameters),
 		}
-		c.emit(code.OpConstant, c.addConstant(compiledFn))
+		fnIndex := c.addConstant(compiledFn)
+		c.emit(code.OpClosure, fnIndex, len(freeSymbols))
 	case *ast.Boolean:
 		if node.Value {
 			c.emit(code.OpTrue)
@@ -274,13 +282,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if !ok {
 			return fmt.Errorf("undefined variable %s", node.Value)
 		}
-		if symbol.Scope == GlobalScope {
-			c.emit(code.OpGetGlobal, symbol.Index)
-		} else if symbol.Scope == LocalScope {
-			c.emit(code.OpGetLocal, symbol.Index)
-		} else if symbol.Scope == BuiltinScope {
-			c.emit(code.OpGetBuiltin, symbol.Index)
-		}
+		c.loadSymbol(symbol)
 	}
 
 	return nil
@@ -358,4 +360,18 @@ func (c *Compiler) leaveScope() code.Instructions {
 	c.scopeIndex--
 	c.symbolTable = c.symbolTable.Outer
 	return ins
+}
+
+func (c *Compiler) loadSymbol(symbol Symbol) {
+	if symbol.Scope == GlobalScope {
+		c.emit(code.OpGetGlobal, symbol.Index)
+	} else if symbol.Scope == LocalScope {
+		c.emit(code.OpGetLocal, symbol.Index)
+	} else if symbol.Scope == BuiltinScope {
+		c.emit(code.OpGetBuiltin, symbol.Index)
+	} else if symbol.Scope == FreeScope {
+		c.emit(code.OpGetFree, symbol.Index)
+	} else if symbol.Scope == FunctionScope {
+		c.emit(code.OpCurrentClosure)
+	}
 }

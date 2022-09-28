@@ -22,6 +22,8 @@ const (
 	OpHash
 	OpIndex
 	OpGetBuiltin
+	OpClosure
+	OpCurrentClosure
 
 	OpAdd
 	OpSub
@@ -50,15 +52,18 @@ const (
 	OpSetGlobal
 	OpGetLocal
 	OpSetLocal
+	OpGetFree
 )
 
 var definitions = map[Opcode]*Definition{
-	OpConstant: {"OpConstant", []int{2}},
-	OpNull:     {"OpNull", []int{}},
-	OpArray:    {"OpArray", []int{2}},
-	OpHash:     {"OpHash", []int{2}},
-	OpIndex:    {"OpIndex", []int{}},
-	OpGetBuiltin: {"OpGetBuiltin",[]int{1}},
+	OpConstant:       {"OpConstant", []int{2}},
+	OpNull:           {"OpNull", []int{}},
+	OpArray:          {"OpArray", []int{2}},
+	OpHash:           {"OpHash", []int{2}},
+	OpIndex:          {"OpIndex", []int{}},
+	OpGetBuiltin:     {"OpGetBuiltin", []int{1}},
+	OpClosure:        {"OpClosure", []int{2, 1}},
+	OpCurrentClosure: {"OpCurrentClosure", []int{}},
 
 	OpAdd: {"OpAdd", []int{}},
 	OpSub: {"OpSub", []int{}},
@@ -87,6 +92,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetGlobal: {"OpSetGlobal", []int{2}},
 	OpGetLocal:  {"OpGetLocal", []int{1}},
 	OpSetLocal:  {"OpSetLocal", []int{1}},
+	OpGetFree:   {"OpGetFree", []int{1}},
 }
 
 func Make(op Opcode, operands ...int) []byte {
@@ -133,7 +139,7 @@ func ReadOperands(def *Definition, ins Instructions) ([]int, int) {
 func ReadUint16(ins Instructions) uint16 {
 	return binary.BigEndian.Uint16(ins)
 }
-func ReadUint8(ins Instructions) uint8{
+func ReadUint8(ins Instructions) uint8 {
 	return uint8(ins[0])
 }
 func (ins Instructions) String() string {
@@ -167,6 +173,8 @@ func (ins Instructions) fmtInstruction(def *Definition, operands []int) string {
 		return def.Name
 	case 1:
 		return fmt.Sprintf("%s %d", def.Name, operands[0])
+	case 2:
+		return fmt.Sprintf("%s %d %d", def.Name, operands[0], operands[1])
 	}
 
 	return fmt.Sprintf("ERROR unhandled operand count %s", def.Name)
