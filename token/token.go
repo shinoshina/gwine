@@ -24,6 +24,7 @@ const (
 	COMMA     = ","
 	SEMICOLON = ";"
 	COLON     = ":"
+	DOT       = "."
 
 	LPAREN   = "("
 	RPAREN   = ")"
@@ -33,6 +34,7 @@ const (
 	RBRACKET = "]"
 
 	FUNCTION = "FUNCTION"
+	STRUCT   = "STRUCT"
 	LET      = "LET"
 	TRUE     = "TRUE"
 	FALSE    = "FALSE"
@@ -58,6 +60,7 @@ var keywords = map[string]TokenType{
 	"if":     IF,
 	"else":   ELSE,
 	"return": RETURN,
+	"struct": STRUCT,
 }
 
 func LookupIdent(ident string) TokenType {

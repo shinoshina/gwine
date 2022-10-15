@@ -317,3 +317,34 @@ func (hl *HashLiteral) String() string {
 	out.WriteString("}")
 	return out.String()
 }
+
+type StructDeclarionStatement struct{
+	Token token.Token
+	Name string
+	Methods []FunctionLiteral
+}
+
+func (sds *StructDeclarionStatement) statementNode(){}
+func (sds *StructDeclarionStatement) TokenLiteral()string{return sds.Token.Literal}
+func (sds *StructDeclarionStatement) String() string{
+	var out bytes.Buffer
+
+	out.WriteString("this is a struct")
+	return out.String()
+}
+
+
+type FunctionDeclarionStatement struct{
+	Token token.Token
+	Name string
+	Body FunctionLiteral
+}
+
+func (fds *FunctionDeclarionStatement) statementNode(){}
+func (fds *FunctionDeclarionStatement) TokenLiteral() string{return fds.Token.Literal}
+func (fds *FunctionDeclarionStatement) String() string{
+	var out bytes.Buffer
+
+	out.WriteString("this is a function declarion")
+	return out.String()
+}

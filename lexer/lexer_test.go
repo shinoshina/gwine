@@ -73,3 +73,39 @@ func TestRawToken(t *testing.T) {
 		}
 	}
 }
+func TestStructToken(t *testing.T) {
+	input := `
+	struct a;
+	let five = 5;
+
+	let ten = 10;
+	let add = fn(x,y) {
+		return x + y;
+	}
+	let result = add(five,ten);
+	!-/*5;
+	5<10>5;
+	if (5 < 10) {
+		return false;
+	}else {
+		return true;
+	}
+	10 != 1
+	1 == 1
+	`
+	// input2 :=  `
+
+
+	// let five = 5;
+	// let x = 6;
+	// let foobar = 123500;
+	// `
+	l := New(input)
+	for {
+		token := l.NextToken()
+		token.Print()
+		if token.Literal == "" {
+			break
+		}
+	}
+}

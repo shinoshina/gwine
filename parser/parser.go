@@ -138,6 +138,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseLetStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
+	case token.STRUCT:
+		return p.parseStructDeclarionStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -225,6 +227,7 @@ func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
 	}
 	return list
 }
+
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	lit := &ast.FunctionLiteral{Token: p.curToken}
 
@@ -398,6 +401,19 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 		p.nextToken()
 	}
 
+	return stmt
+}
+func (p *Parser) parseStructDeclarionStatement() *ast.StructDeclarionStatement{
+	stmt := &ast.StructDeclarionStatement{Token: p.curToken}
+
+	p.nextToken()
+	stmt.Name = p.parseExpression(LOWEST).TokenLiteral()
+	return stmt
+}
+func (p *Parser) parseFunctionDeclarionStatement()  *ast.FunctionDeclarionStatement{
+	stmt := &ast.FunctionDeclarionStatement{Token: p.curToken}
+	p.nextToken()
+	stmt.Name = p.parseExpression(LOWEST).TokenLiteral()
 	return stmt
 }
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

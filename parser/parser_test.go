@@ -257,3 +257,22 @@ func TestIFELSE(t *testing.T) {
 	}
 
 }
+
+func TestStruct(t *testing.T) {
+	input := `
+	struct ff
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for i, _ := range program.Statements {
+		stmt, ok := program.Statements[i].(*ast.StructDeclarionStatement)
+		if !ok {
+			t.Fatalf("failffffffail")
+		}
+		fmt.Println(stmt.String())
+	}
+
+}
