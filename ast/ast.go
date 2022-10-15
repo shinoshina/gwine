@@ -321,7 +321,7 @@ func (hl *HashLiteral) String() string {
 type StructDeclarionStatement struct{
 	Token token.Token
 	Name string
-	Methods []FunctionLiteral
+	Methods []*FunctionDeclarionStatement
 }
 
 func (sds *StructDeclarionStatement) statementNode(){}
@@ -330,6 +330,11 @@ func (sds *StructDeclarionStatement) String() string{
 	var out bytes.Buffer
 
 	out.WriteString("this is a struct")
+	methodString := []string{}
+	for _,ms := range sds.Methods{
+		methodString = append(methodString, ms.String())
+	}
+	out.WriteString(strings.Join(methodString,"\n"))
 	return out.String()
 }
 
@@ -337,7 +342,7 @@ func (sds *StructDeclarionStatement) String() string{
 type FunctionDeclarionStatement struct{
 	Token token.Token
 	Name string
-	Body FunctionLiteral
+	Body *FunctionLiteral
 }
 
 func (fds *FunctionDeclarionStatement) statementNode(){}
@@ -346,5 +351,7 @@ func (fds *FunctionDeclarionStatement) String() string{
 	var out bytes.Buffer
 
 	out.WriteString("this is a function declarion")
+	
+	out.WriteString(fds.Body.String())
 	return out.String()
 }

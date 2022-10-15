@@ -18,6 +18,7 @@ const (
 	PREFIX      // -X / !X
 	CALL        // function(x)
 	INDEX
+	NAMEDECLARION
 )
 
 var precedences = map[token.TokenType]int{
@@ -140,6 +141,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseReturnStatement()
 	case token.STRUCT:
 		return p.parseStructDeclarionStatement()
+	case token.FUNCTION:
+		return p.parseFunctionDeclarionStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -382,7 +385,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	}
 	p.nextToken()
 	stmt.Value = p.parseExpression(LOWEST)
-	if fl,ok := stmt.Value.(*ast.FunctionLiteral);ok{
+	if fl, ok := stmt.Value.(*ast.FunctionLiteral); ok {
 		fl.Name = stmt.Name.Value
 	}
 
@@ -403,17 +406,44 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	return stmt
 }
-func (p *Parser) parseStructDeclarionStatement() *ast.StructDeclarionStatement{
+func (p *Parser) parseStructDeclarionStatement() *ast.StructDeclarionStatement {
 	stmt := &ast.StructDeclarionStatement{Token: p.curToken}
 
 	p.nextToken()
 	stmt.Name = p.parseExpression(LOWEST).TokenLiteral()
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+	stmts := p.parseBlockStatement().Statements
+	methods := make([]*ast.FunctionDeclarionStatement, 0)
+	for _, m := range stmts {
+		method, ok := m.(*ast.FunctionDeclarionStatement)
+		if !ok {
+			return nil
+		}
+		methods = append(methods, method)
+	}
+	stmt.Methods = methods
 	return stmt
 }
-func (p *Parser) parseFunctionDeclarionStatement()  *ast.FunctionDeclarionStatement{
+
+func (p *Parser) parseFunctionDeclarionStatement() *ast.FunctionDeclarionStatement {
 	stmt := &ast.FunctionDeclarionStatement{Token: p.curToken}
+	fn := &ast.FunctionLiteral{Token: p.curToken}
 	p.nextToken()
-	stmt.Name = p.parseExpression(LOWEST).TokenLiteral()
+	stmt.Name = p.parseExpression(NAMEDECLARION).TokenLiteral()
+	fn.Name = stmt.Name
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+	fn.Parameters = p.parseFunctionParameters()
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+	fn.Body = p.parseBlockStatement()
+
+	stmt.Body = fn
+
 	return stmt
 }
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

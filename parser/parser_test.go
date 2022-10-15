@@ -258,20 +258,46 @@ func TestIFELSE(t *testing.T) {
 
 }
 
-func TestStruct(t *testing.T) {
+func TestStructDeclarion(t *testing.T) {
 	input := `
-	struct ff
+	struct ff{
+		fn a(){
+			return 1;
+		}
+		fn b(){
+			return 2;
+		}
+	}
 	`
 
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
 
-	for i, _ := range program.Statements {
-		stmt, ok := program.Statements[i].(*ast.StructDeclarionStatement)
-		if !ok {
-			t.Fatalf("failffffffail")
-		}
+	// for i, _ := range program.Statements {
+	// 	stmt, ok := program.Statements[i].(*ast.StructDeclarionStatement)
+	// 	if !ok {
+	// 		t.Fatalf("failffffffail")
+	// 	}
+	// 	fmt.Println(stmt.String())
+	// }
+	for _, stmt := range program.Statements {
+		fmt.Println(stmt.String())
+	}
+}
+
+func TestFunctionDeclarion(t *testing.T) {
+	input := `
+	fn ff(a,b){
+		let k = 1;
+	}
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+
+	for _, stmt := range program.Statements {
 		fmt.Println(stmt.String())
 	}
 
