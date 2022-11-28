@@ -15,10 +15,12 @@ type Compiler struct {
 	scopeIndex int
 
 	symbolTable *SymbolTable
+	types       []object.Type
 }
 type Bytecode struct {
 	Instructions code.Instructions
 	Constants    []object.Object
+	Types        []object.Type
 }
 type EmittedInstruction struct {
 	Opcode   code.Opcode
@@ -59,6 +61,7 @@ func NewWithState(st *SymbolTable, constants []object.Object) *Compiler {
 		scopes:      []CompilationScope{mainScope},
 		scopeIndex:  0,
 		symbolTable: st,
+		types:       make([]object.Type, 0),
 	}
 }
 func (c *Compiler) ByteCode() *Bytecode {
@@ -105,6 +108,26 @@ func (c *Compiler) Compile(node ast.Node) error {
 			if err != nil {
 				return err
 			}
+		}
+
+	case *ast.StructDeclarion:
+		stype := object.Type{
+			Name: node.Name,
+		}
+		vars := []*object.Member{}
+		for _, v := range node.Vars {
+			stype.Variables[v.Value] = &object.Member{
+				Name: v.Value,
+			}
+			vars = append(vars, stype.Variables[v.Value])
+		}
+
+		methods, err := c.CompileMethods(vars, node.Methods)
+		if err != nil {
+			return err
+		}
+		for i, m := range methods {
+			stype.Methods[node.Methods[i].Name] = m
 		}
 	case *ast.PrefixExpression:
 		err := c.Compile(node.Right)
@@ -354,6 +377,16 @@ func (c *Compiler) enterScope() {
 
 	c.symbolTable = NewEnclosedSymbolTable(c.symbolTable)
 }
+func (c *Compiler) enterTypeInnerScope(vars []*object.Member) {
+	scope := CompilationScope{
+		instructions:        code.Instructions{},
+		lastInstruction:     EmittedInstruction{},
+		previousInstruction: EmittedInstruction{},
+	}
+	c.scopes = append(c.scopes, scope)
+	c.scopeIndex++
+	c.symbolTable = NewTypeInnerSymbolTable(vars)
+}
 func (c *Compiler) leaveScope() code.Instructions {
 	ins := c.currentInstructions()
 	c.scopes = c.scopes[:len(c.scopes)-1]
@@ -373,5 +406,47 @@ func (c *Compiler) loadSymbol(symbol Symbol) {
 		c.emit(code.OpGetFree, symbol.Index)
 	} else if symbol.Scope == FunctionScope {
 		c.emit(code.OpCurrentClosure)
+	} else if symbol.Scope == StructScope {
+
 	}
+}
+
+func (c *Compiler) CompileMethods(vars []*object.Member, literals []*ast.FunctionLiteral) ([]*object.CompiledFunction, error) {
+	compiledFns := []*object.CompiledFunction{}
+
+	for _, literal := range literals {
+
+		c.enterTypeInnerScope(vars)
+
+		if literal.Name != "" {
+			c.symbolTable.DefineFunctionName(literal.Name)
+		}
+		for _, p := range literal.Parameters {
+			c.symbolTable.Define(p.Value)
+		}
+		err := c.Compile(literal.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		if c.lastInstructionIs(code.OpPop) {
+			c.replaceLastPopWithReturn()
+		}
+		if !c.lastInstructionIs(code.OpReturnValue) {
+			c.emit(code.OpReturn)
+		}
+		numLocals := c.symbolTable.numDefinitions
+
+		ins := c.leaveScope()
+
+		compiledFn := &object.CompiledFunction{
+			Instructions:  ins,
+			NumLocals:     numLocals,
+			NumParameters: len(literal.Parameters),
+		}
+
+		compiledFns = append(compiledFns, compiledFn)
+
+	}
+	return compiledFns, nil
 }

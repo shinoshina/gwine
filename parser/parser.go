@@ -406,8 +406,8 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	return stmt
 }
-func (p *Parser) parseStructDeclarionStatement() *ast.StructDeclarionStatement {
-	stmt := &ast.StructDeclarionStatement{Token: p.curToken}
+func (p *Parser) parseStructDeclarionStatement() *ast.StructDeclarion {
+	stmt := &ast.StructDeclarion{Token: p.curToken}
 
 	p.nextToken()
 	stmt.Name = p.parseExpression(LOWEST).TokenLiteral()
@@ -415,15 +415,24 @@ func (p *Parser) parseStructDeclarionStatement() *ast.StructDeclarionStatement {
 		return nil
 	}
 	stmts := p.parseBlockStatement().Statements
-	methods := make([]*ast.FunctionDeclarionStatement, 0)
-	for _, m := range stmts {
-		method, ok := m.(*ast.FunctionDeclarionStatement)
-		if !ok {
-			return nil
+	methods := make([]*ast.FunctionLiteral, 0)
+	vars := make([]*ast.Identifier, 0)
+	for _, member := range stmts {
+		switch member := member.(type) {
+		case *ast.FunctionDeclarionStatement:
+			methods = append(methods, member.Body)
+		case *ast.ExpressionStatement:
+			varm , ok := member.Expression.(*ast.Identifier)
+			if !ok {
+				return nil
+			}
+			vars = append(vars, varm)
+		default:
+			panic("unfitable member type in struct")
 		}
-		methods = append(methods, method)
 	}
 	stmt.Methods = methods
+	stmt.Vars = vars
 	return stmt
 }
 

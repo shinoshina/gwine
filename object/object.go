@@ -26,6 +26,10 @@ const (
 	BUILTIN_OBJ           = "BUILTIN"
 	COMPILED_FUNCTION_OBJ = "COMPILED_FUNCTION"
 
+	MEMBER_OBJ = "MEMBER"
+	STRUCT_OBJ = "STRUCT"
+	TYPE_OBJ   = "TYPE"
+
 	ERROR_OBJ = "ERROR"
 )
 
@@ -96,14 +100,14 @@ func (f *Function) Inspect() string {
 }
 
 type CompiledFunction struct {
-	Instructions code.Instructions
-	NumLocals int
+	Instructions  code.Instructions
+	NumLocals     int
 	NumParameters int
 }
 
-func (cf *CompiledFunction) Type() ObjectType{return COMPILED_FUNCTION_OBJ}
-func (cf *CompiledFunction) Inspect()string{
-	return fmt.Sprintf("Compiled function[%p]",cf)
+func (cf *CompiledFunction) Type() ObjectType { return COMPILED_FUNCTION_OBJ }
+func (cf *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("Compiled function[%p]", cf)
 }
 
 type String struct {
@@ -189,17 +193,37 @@ func (h *Hash) Inspect() string {
 	return out.String()
 }
 
-
 func newError(format string, a ...interface{}) *Error {
 	return &Error{Message: fmt.Sprintf(format, a...)}
 }
 
-
-type Closure struct{
-	Fn *CompiledFunction
+type Closure struct {
+	Fn   *CompiledFunction
 	Free []Object
 }
-func (c *Closure) Type() ObjectType{return CLOSURE_OBJ}
-func (c *Closure) Inspect() string{
-	return fmt.Sprintf("Closure[%p]",c)
+
+func (c *Closure) Type() ObjectType { return CLOSURE_OBJ }
+func (c *Closure) Inspect() string {
+	return fmt.Sprintf("Closure[%p]", c)
+}
+
+type Member struct {
+	Name string
+	Value Object
+}
+
+func (mem *Member) Type() ObjectType { return MEMBER_OBJ }
+func (mem *Member) Inspect() string {
+	return mem.Name + ":" + mem.Value.Inspect()
+}
+
+type Type struct {
+	Name      string
+	Methods   map[string]*CompiledFunction
+	Variables map[string]*Member
+}
+
+func (t *Type) Type() ObjectType { return TYPE_OBJ }
+func (t *Type) Inspect() string{
+	return "type declarition"
 }

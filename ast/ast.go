@@ -318,20 +318,21 @@ func (hl *HashLiteral) String() string {
 	return out.String()
 }
 
-type StructDeclarionStatement struct{
+type StructDeclarion struct{
 	Token token.Token
 	Name string
-	Methods []*FunctionDeclarionStatement
+	Methods []*FunctionLiteral
+	Vars []*Identifier
 }
 
-func (sds *StructDeclarionStatement) statementNode(){}
-func (sds *StructDeclarionStatement) TokenLiteral()string{return sds.Token.Literal}
-func (sds *StructDeclarionStatement) String() string{
+func (sd *StructDeclarion) statementNode(){}
+func (sd *StructDeclarion) TokenLiteral()string{return sd.Token.Literal}
+func (sd *StructDeclarion) String() string{
 	var out bytes.Buffer
 
 	out.WriteString("this is a struct")
 	methodString := []string{}
-	for _,ms := range sds.Methods{
+	for _,ms := range sd.Methods{
 		methodString = append(methodString, ms.String())
 	}
 	out.WriteString(strings.Join(methodString,"\n"))

@@ -267,6 +267,7 @@ func TestStructDeclarion(t *testing.T) {
 		fn b(){
 			return 2;
 		}
+		a
 	}
 	`
 

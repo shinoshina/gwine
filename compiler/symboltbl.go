@@ -1,5 +1,7 @@
 package compiler
 
+import "gwine/object"
+
 type SymbolScope string
 
 const (
@@ -8,6 +10,7 @@ const (
 	BuiltinScope  SymbolScope = "BUILTIN"
 	FreeScope     SymbolScope = "FREE"
 	FunctionScope SymbolScope = "FUNCTION"
+	StructScope   SymbolScope = "STRUCT"
 )
 
 type Symbol struct {
@@ -37,6 +40,23 @@ func NewEnclosedSymbolTable(outer *SymbolTable) *SymbolTable {
 		Outer:       outer,
 	}
 }
+func NewTypeInnerSymbolTable(inners []*object.Member) *SymbolTable {
+
+	st := &SymbolTable{
+		store: make(map[string]Symbol),
+		FreeSymbols: []Symbol{},
+	}
+	for _ , i := range inners{
+		st.DefineInner(i.Name)	
+	}
+	return st
+}
+func (st *SymbolTable) DefineInner(name string) {
+	symbol := Symbol{Name: name,Index: st.numDefinitions}
+	symbol.Scope = StructScope
+	st.numDefinitions ++
+	st.store[name] = symbol
+}
 func (st *SymbolTable) Define(name string) Symbol {
 	symbol := Symbol{Name: name, Index: st.numDefinitions}
 	if st.Outer == nil {
@@ -60,11 +80,12 @@ func (st *SymbolTable) defineFree(original Symbol) Symbol {
 	st.store[original.Name] = symbol
 	return symbol
 }
-func (st *SymbolTable) DefineFunctionName(name string) Symbol{
-	symbol := Symbol{Name: name,Index: 0,Scope: FunctionScope}
+func (st *SymbolTable) DefineFunctionName(name string) Symbol {
+	symbol := Symbol{Name: name, Index: 0, Scope: FunctionScope}
 	st.store[name] = symbol
 	return symbol
 }
+
 func (st *SymbolTable) Resolve(name string) (Symbol, bool) {
 	sym, ok := st.store[name]
 	if !ok && st.Outer != nil {
